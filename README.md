@@ -1,3 +1,3 @@
-# A Java Desktop Version Control App for Digital Projects 🎛🗃🗂
+# A Version Control Desktop App for Digital Projects 🎛🗃🗂
 
 A version control program for any computer project that makes it easy to create a backup directory within the local machine, copy folders or files to the backup directory or any other folder,  keeps track of merges and organizes incremental development of project's with branches that help with experimenting of the master project branch, and for easy tracking and transferring of data to external devices all through the convince of the command line of the machine. The program also provides password protection for the backup directories, projects, and project branches. 
