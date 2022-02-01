@@ -42,11 +42,11 @@ public class Version implements Serializable {
 		regularTime = getRegularTimeForm(timeCreatedForTheSavedDay);
 
 	}
-	String getTime() {
+	public String getTime() {
 		return regularTime;
 	}
 	
-	String getRegularTimeForm(String militaryTime) {
+	public String getRegularTimeForm(String militaryTime) {
 		// If militaryTime has DOUBLE DIGITS....
 		if(Integer.parseInt(militaryTime.substring(0, 2)) <= 9)
 		{
@@ -59,7 +59,7 @@ public class Version implements Serializable {
 //		System.out.println("File created on: " + df.format(dateAndTimeStamp));
 //	}
 	
-	String getDayCreated() {
+	public String getDayCreated() {
 		return dayCreated;
 	}
 }
