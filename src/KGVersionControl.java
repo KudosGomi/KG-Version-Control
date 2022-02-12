@@ -36,7 +36,7 @@ import java.util.prefs.Preferences;
 		* Program can only create project's and branches WITHIN the backup workspace directory
 		* Program will ask for a password each time a project and branch is made....
 		
-		*  
+		*  Create a string class for commands, preferences, and common phrases....
  * 
  */
 
@@ -45,7 +45,8 @@ public class KGVersionControl {
 	private static final Scanner userInput = new Scanner(System.in);
 	private static final String OSfileSeparator = File.separator;;
 	private static Preferences systemPreferences;
-	private static String workSpaceDirectory;
+	private static String sysPrefWorkSpaceDirectory;
+	private static String sysPrefDirectoryDepthNumber;
 	private static ArrayList<String> commandWordsList;
 
 	public static void main(String[] args) throws BackingStoreException {
@@ -68,21 +69,31 @@ public class KGVersionControl {
 		
 		// Creates/Loads the program's preferences file and then clears it to remove workspace directory FOR TESTING....
 		systemPreferences = Preferences.userNodeForPackage(KGVersionControl.class);
+		// systemPreferences.put("directoryDepth", "1");
+		
+		sysPrefWorkSpaceDirectory = systemPreferences.get("workspace", "");
+		sysPrefDirectoryDepthNumber = systemPreferences.get("directoryDepth", "1");
+		
 		// systemPreferences.clear();
-		workSpaceDirectory = systemPreferences.get("workspace", "");
+		
 		
 		// Create the list of commands....
 		commandWordsList = new ArrayList<String>();
 		commandWordsList.add("~KGCom");
 		commandWordsList.add("copy");
 		commandWordsList.add("merge");
+		commandWordsList.add("preferences"); // add workspace command to preferences.... add which projects/branches to password protect....
 		commandWordsList.add("retrieve");
 		commandWordsList.add("save");
 		commandWordsList.add("view");
 		commandWordsList.add("workspace");
+		
 		// commandWordsList.add("comment"); // Allows user to make comments to branches/projects....
 		// commandWordsList.add("create");  // ....
 		// commandWordsList.add("git");     // Execute Github commands and can save to your repository's....
+		
+		// For MacOS....
+		String workspace = "~" + sysPrefWorkSpaceDirectory.substring(sysPrefWorkSpaceDirectory.lastIndexOf("/")+1, sysPrefWorkSpaceDirectory.length());
 		
 		// Different conditions for args.length == 0, 1, & 2
 		// if args[1] is , the \n will be else if
@@ -102,7 +113,7 @@ public class KGVersionControl {
 					+ "[Project] can either be the name of an existing project or can create\n"
 					+ "a new project with a different name, if it does not exist....\n\n"
 					+ "[Branch] can either be the name of an existing branch or can create\n"
-					+ "a new branch with a different name, if it does not exsit....\n"
+					+ "a new branch with a different name, if it does not exsit....\n\n"
 					+ "~KG Version Control program terminated.\n\n");
 			System.exit(0);
 		}
@@ -132,16 +143,20 @@ public class KGVersionControl {
 				displayAllProjectsAndBranches();
 				System.exit(0);
 			}
-			else if(args[0].equalsIgnoreCase("workspace"))
+			else if(args[0].equalsIgnoreCase("workspace")) // delete
 			{
+				// vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+				//  DELETE THIS CONDITION, WORKSPACE WILL BE ADD UNDER PREFERENCES.....!!!!
+				// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+				
 				System.out.print("\n\n\t\t\t- KG VERSION CONTROL PROGRAM -"
 						+ "\nRetrieving workspace directory....\n");
-				if(workSpaceDirectory.isEmpty())
+				if(sysPrefWorkSpaceDirectory.isEmpty())
 				{	
-					workSpaceDirectory = enforceValidWorkspaceDirectory(systemPreferences);
+					sysPrefWorkSpaceDirectory = enforceValidWorkspaceDirectory(systemPreferences);
 					System.exit(0);
 				}
-				changeWorkSpace(systemPreferences, workSpaceDirectory);
+				changeWorkSpace(systemPreferences, sysPrefWorkSpaceDirectory);
 				System.exit(0);
 			}
 			
@@ -181,14 +196,14 @@ public class KGVersionControl {
 				+ "\nRetrieving workspace directory....");
 		
 		// Initially thought about using regex here....
-		if(workSpaceDirectory.isEmpty())
+		if(sysPrefWorkSpaceDirectory.isEmpty())
 		{			
 			// May need classes to capture OS specifics later in development....
 			// Password protected?....
-			workSpaceDirectory = enforceValidWorkspaceDirectory(systemPreferences);
+			sysPrefWorkSpaceDirectory = enforceValidWorkspaceDirectory(systemPreferences);
 		}
 		
-		System.out.println("Workspace Directory: \n\n\t" + workSpaceDirectory + "\n");
+		System.out.println("Workspace Directory: \n\n\t" + sysPrefWorkSpaceDirectory + "\n");
 		
 		// if args[0] is a [command] and more than 2 parameters were entered 
 		if(commandWordsList.contains(args[0]) && args.length >= 2)
@@ -241,18 +256,80 @@ public class KGVersionControl {
 						// Program allows user to create a branch if system preferences permit it....
 						// Also, depending on the number of depth the KGVC is permitted to access directories....
 						// [desPath] projectName/branchName.... in this case, branch name does NOT exist....
+						// Encapsulate this into a method()....
 //						if(KGVCpreferences.copy == True)
 //						{
 							// loop back through directories to find which path exists....
-							String destProjectPath = (workSpaceDirectory + OSfileSeparator + args[2]);
-							
-							// System.out.println("dest Path: " + destProjectPath.substring(0, destProjectPath.lastIndexOf("/")));
-							for(int depth = 0; depth < )
+							String destProjectPath = (sysPrefWorkSpaceDirectory + OSfileSeparator + args[2]);
+							String[] pathTokens = args[2].split("/");
+//							String[] pathTokens = args[2].substring(args[2].indexOf("/")+1, args[2].length()).split("/");
+							for(int i = 0; i < pathTokens.length; i++)
 							{
-								
+								System.out.println("Token: " + pathTokens[i]);
 							}
-							
-//							System.out.println("Branch did NOT exist for the [project]: " + );
+							String newTrimmedPaths = destProjectPath;
+							for(int depth = 0; depth < (pathTokens.length-1); depth++)
+							{
+								newTrimmedPaths = newTrimmedPaths.substring(0, newTrimmedPaths.lastIndexOf("/"));
+								String branch_es = destProjectPath.substring(newTrimmedPaths.lastIndexOf("/", newTrimmedPaths.length()));
+								Path validDir = Paths.get(newTrimmedPaths);
+								if(Files.exists(validDir)) // testProject/testBranch/a/b is valid....
+								{
+									
+									// System preference depth....
+//									if(preferenceDepth == 1)
+//									{
+										System.out.print("No such [branch] exists within the [project]....\n" 
+												+ "Create a new [branch] using: (Y / N): \n" + (workspace + branch_es) + "\033[1A\033[9C");
+										String createBranch = userInput.nextLine();
+										if(createBranch.equalsIgnoreCase("y") || createBranch.equalsIgnoreCase("yes"))
+										{
+											// Create new branch folder....
+//											File newBranch_es = new File(destProjectPath);
+//											newBranch_es.mkdir();
+
+											// Copy this over to the bottom if depth is larger than the default 1....
+											// testBranch/2nd/3rd
+											// Make sure to create new line "\n" here.... 
+											System.out.println();
+											String beginningOfProjectPath = pathTokens[0];
+											for(int eachBranch = 1; eachBranch <= pathTokens.length; eachBranch++)
+											{
+												if(eachBranch >= pathTokens.length)
+												{
+													break;
+												}
+												beginningOfProjectPath = beginningOfProjectPath + OSfileSeparator + pathTokens[eachBranch];
+												File depthBranches = new File(sysPrefWorkSpaceDirectory + OSfileSeparator + beginningOfProjectPath);
+//												System.out.println("Depth: " + depthBranches.getAbsolutePath());
+												depthBranches.mkdir();
+//												newBranchPaths = args[2].substring(args[2].indexOf("/"), args[2]);
+//												File eachNewBranchDepthFolder = new File(workSpaceDirectory + OSfileSeparator + newBranchPaths.substring(0));
+											}
+											System.exit(0);
+										}
+										else if(createBranch.equalsIgnoreCase("n") || createBranch.equalsIgnoreCase("no"))
+										{
+											System.out.println("\n\nKGVC Error Message:\n"
+													+ "To create a new [branch] (or branches), run the program again with a certain\n"
+													+ "[branch] name -- if the [branch] does NOT already exist....\n"
+													+ "~ KG Version Control program terminated. ~\n\n");
+											System.exit(0);
+										}
+										else
+										{
+											
+										}
+										// Get cursor back to default....
+										System.out.println();
+										break;
+//									}
+//									else if(preferenceDepth >= 2)
+//									{
+										
+//									}
+								}
+							}
 //						}
 //						else if(KGVCpreferences.copy == False)
 //						{
@@ -343,11 +420,11 @@ public class KGVersionControl {
 				
 				if(args.length == 3)
 				{
-					checkIfProjectExist(workSpaceDirectory, fileOrDirSrc, args[2], "", isFileOrDir);
+					checkIfProjectExist(sysPrefWorkSpaceDirectory, fileOrDirSrc, args[2], "", isFileOrDir);
 				}
 				else if(args.length == 4)
 				{
-					checkIfProjectExist(workSpaceDirectory, fileOrDirSrc, args[2], args[3], isFileOrDir);
+					checkIfProjectExist(sysPrefWorkSpaceDirectory, fileOrDirSrc, args[2], args[3], isFileOrDir);
 				}
 				 System.exit(0);
 			}
@@ -623,7 +700,7 @@ public class KGVersionControl {
 						System.out.println("\nKGVC Error Message:\n"
 								+ "To create a new [branch], run the program again with a certain\n"
 								+ "[branch] name -- if the [branch] does NOT already exist....\n"
-								+ "~KG Version Control program terminated.\n\n");
+								+ "~ KG Version Control program terminated. ~\n\n");
 						System.exit(0);
 					}
 					System.out.println();
@@ -706,7 +783,7 @@ public class KGVersionControl {
 									+ "User did NOT want to save to the \'Master\' [branch]....\n"
 									+ "To create a new [project] with a new [branch], run the KG Version Control program\n"
 									+ "again with certain names to create, or retrieve, [project]'s and [branch]'s....\n"
-									+ "~KG Version Control program terminated.\n\n");
+									+ "~ KG Version Control program terminated. ~\n\n");
 							System.exit(0);
 						}
 					}
@@ -720,7 +797,7 @@ public class KGVersionControl {
 						+ "certain [project] name and a certain new [branch] name,\n"
 						+ "if desired -- and if the [project] and [branch] do NOT already\n"
 						+ "exist within the workspace for the KG Version Control proram....\n"
-						+ "~KG Version Control program terminated.\n\n");
+						+ "~ KG Version Control program terminated. ~\n\n");
 				System.exit(0);
 			}
 		}
