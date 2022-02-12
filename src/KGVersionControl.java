@@ -37,6 +37,8 @@ import java.util.prefs.Preferences;
 		* Program will ask for a password each time a project and branch is made....
 		
 		*  Create a string class for commands, preferences, and common phrases....
+
+		*  Should the KGVC program delete workspace every time it quits?....
  * 
  */
 
@@ -72,7 +74,7 @@ public class KGVersionControl {
 		// systemPreferences.put("directoryDepth", "1");
 		
 		sysPrefWorkSpaceDirectory = systemPreferences.get("workspace", "");
-		sysPrefDirectoryDepthNumber = systemPreferences.get("directoryDepth", "1");
+		sysPrefDirectoryDepthNumber = systemPreferences.get("directoryDepth", "0"); // 1
 		
 		// systemPreferences.clear();
 		
@@ -156,7 +158,7 @@ public class KGVersionControl {
 					sysPrefWorkSpaceDirectory = enforceValidWorkspaceDirectory(systemPreferences);
 					System.exit(0);
 				}
-				changeWorkSpace(systemPreferences, sysPrefWorkSpaceDirectory);
+				sysPrefWorkSpace(systemPreferences, sysPrefWorkSpaceDirectory);
 				System.exit(0);
 			}
 			
@@ -257,16 +259,16 @@ public class KGVersionControl {
 						// Also, depending on the number of depth the KGVC is permitted to access directories....
 						// [desPath] projectName/branchName.... in this case, branch name does NOT exist....
 						// Encapsulate this into a method()....
-//						if(KGVCpreferences.copy == True)
+//						if(sysPrefCreateProject == True) else if false; system checks for creating branches.....
 //						{
 							// loop back through directories to find which path exists....
 							String destProjectPath = (sysPrefWorkSpaceDirectory + OSfileSeparator + args[2]);
 							String[] pathTokens = args[2].split("/");
 //							String[] pathTokens = args[2].substring(args[2].indexOf("/")+1, args[2].length()).split("/");
-							for(int i = 0; i < pathTokens.length; i++)
-							{
-								System.out.println("Token: " + pathTokens[i]);
-							}
+//							for(int i = 0; i < pathTokens.length; i++)
+//							{
+//								System.out.println("Token: " + pathTokens[i]);
+//							}
 							String newTrimmedPaths = destProjectPath;
 							for(int depth = 0; depth < (pathTokens.length-1); depth++)
 							{
@@ -275,10 +277,68 @@ public class KGVersionControl {
 								Path validDir = Paths.get(newTrimmedPaths);
 								if(Files.exists(validDir)) // testProject/testBranch/a/b is valid....
 								{
+									System.out.println("Valid path: " + newTrimmedPaths);
+									
+									// No project exists....
+									if(newTrimmedPaths.equalsIgnoreCase(workspace)) {
+										System.out.print("No such [project] exists within the [workspace]....\n" 
+												+ "Create a new [project] using: (Y / N): \n" + (workspace + newTrimmedPaths.substring(newTrimmedPaths.lastIndexOf("/"), newTrimmedPaths.length())) + "\033[1A\033[9C");
+										String userCreateBranchInput = userInput.nextLine();
+										if(userCreateBranchInput.equalsIgnoreCase("y") || userCreateBranchInput.equalsIgnoreCase("yes"))
+										{
+											// Create new branch folder....
+											File newProject = new File(destProjectPath);
+											newProject.mkdir();
+											System.exit(0);
+										}
+										else if(userCreateBranchInput.equalsIgnoreCase("n") || userCreateBranchInput.equalsIgnoreCase("no"))
+										{
+											System.out.println("\n\nKGVC Error Message:\n"
+													+ "To create a new [branch] (or branches), run the program again with a certain\n"
+													+ "[branch] name -- if the [branch] does NOT already exist....\n"
+													+ "~ KG Version Control program terminated. ~\n\n");
+											System.exit(0);
+										}
+										else if(userCreateBranchInput.equalsIgnoreCase("q") || userCreateBranchInput.equalsIgnoreCase("quit"))
+										{
+											System.out.println("~ KGVC program terminated. ~");
+										}
+										else
+										{
+											System.out.println("Enter either yes (y), no (n), or quit (q)....\n"
+													+ "~ KGVC program terminated. ~");
+										}
+										// Get cursor back to default....
+										System.out.println();
+										break;
+									}
 									
 									// System preference depth....
-//									if(preferenceDepth == 1)
-//									{
+									if(sysPrefDirectoryDepthNumber.equalsIgnoreCase("0"))
+									{
+										
+
+											// Copy this over to the bottom if depth is larger than the default 1....
+											// testBranch/2nd/3rd
+											// Make sure to create new line "\n" here.... 
+//											System.out.println();
+//											String beginningOfProjectPath = pathTokens[0];
+//											for(int eachBranch = 1; eachBranch <= pathTokens.length; eachBranch++)
+//											{
+//												if(eachBranch >= pathTokens.length)
+//												{
+//													break;
+//												}
+//												beginningOfProjectPath = beginningOfProjectPath + OSfileSeparator + pathTokens[eachBranch];
+//												File depthBranches = new File(sysPrefWorkSpaceDirectory + OSfileSeparator + beginningOfProjectPath);
+////												System.out.println("Depth: " + depthBranches.getAbsolutePath());
+//												depthBranches.mkdir();
+////												newBranchPaths = args[2].substring(args[2].indexOf("/"), args[2]);
+////												File eachNewBranchDepthFolder = new File(workSpaceDirectory + OSfileSeparator + newBranchPaths.substring(0));
+//											}
+									}
+									else if(Integer.parseInt(sysPrefDirectoryDepthNumber) >= 1)
+									{
 										System.out.print("No such [branch] exists within the [project]....\n" 
 												+ "Create a new [branch] using: (Y / N): \n" + (workspace + branch_es) + "\033[1A\033[9C");
 										String createBranch = userInput.nextLine();
@@ -323,11 +383,7 @@ public class KGVersionControl {
 										// Get cursor back to default....
 										System.out.println();
 										break;
-//									}
-//									else if(preferenceDepth >= 2)
-//									{
-										
-//									}
+									}
 								}
 							}
 //						}
@@ -358,6 +414,10 @@ public class KGVersionControl {
 						}
 					}
 					// else? 
+				}
+				else if(args.length > 3)
+				{
+					
 				}
 			}
 			
@@ -428,6 +488,15 @@ public class KGVersionControl {
 				}
 				 System.exit(0);
 			}
+			
+			if(args[0].equalsIgnoreCase("preferences") || args[0].equalsIgnoreCase("pref") || args[0].equalsIgnoreCase("prefs"))
+			{
+				// System Preferences....
+				//    * workspace
+				//    * directory depth
+				//    * password protected commands/projects/branches/
+				//    * 
+			}
 		}
 		
 		
@@ -492,7 +561,23 @@ public class KGVersionControl {
 	
 	private static void displayAllProjectsAndBranches() {}
 	
-	private static void changeWorkSpace(Preferences systemPreferences, String workSpaceDirectory) {
+	private static void sysPrefDirectoryDepth() {
+		// Check preference for password....
+		// For the save && copy command?....
+		// Copy can copy a file/dir anywhere on user's directory, which might need 2 versions then....
+				// * one for how it is rn
+				// * the other version, or perhaps the right way, is to on;y copy within the workspace....
+		// Default: is a variable and represents the depth of which the system can access sub directories....
+		// Default: 0 should be just the 
+		// Default == 0, no more than 2....
+				// 0: is project only 
+				// 1: 
+				// 2:
+		// Not here, but check preference for creating branches....
+		// 
+	}
+	
+	private static void sysPrefWorkSpace(Preferences systemPreferences, String workSpaceDirectory) {
 		
 		// Password protected?....
 		System.out.println("Workspace Directory: \n\n\t" + workSpaceDirectory);
@@ -542,6 +627,7 @@ public class KGVersionControl {
 	}
 	
 	// Prompts user to enter a workspace directory and validates whether path exists or not.... 
+	
 	
 	private static String enforceValidWorkspaceDirectory(Preferences systemPreferences) {
 
@@ -803,6 +889,7 @@ public class KGVersionControl {
 		}
 	}
 	
+	
 	private static void checkAndSaveToBranch(File fileOrDirSrc, String branchPath, String isFileOrDir) {
 		
 		if(branchPath.endsWith("Master"))
@@ -956,6 +1043,8 @@ public class KGVersionControl {
 //		p.destroy();
 	}
 	
+	
+
 	private static void copyDirectoryRecursively(File source, File target) throws IOException, InterruptedException {
 		if (!target.exists()) {
 			target.mkdir();
