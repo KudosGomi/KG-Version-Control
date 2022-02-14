@@ -4,7 +4,7 @@
 <br />
 Software Developmet Life Cycle: AGILE
 <br />
-Development Start Date: 
+Development Start Date: Beginning of 2022
 
 Learning from the project:
   * Java preferences in order to save/delete directories, passwords, the depth the KGVC program can access or create new folders/paths, etc.
