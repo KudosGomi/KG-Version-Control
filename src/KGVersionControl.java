@@ -39,6 +39,8 @@ import java.util.prefs.Preferences;
 		*  Create a string class for commands, preferences, and common phrases....
 
 		*  Should the KGVC program delete workspace every time it quits?....
+		
+		*  File/Dir has to exist within 
  * 
  */
 
@@ -56,7 +58,7 @@ public class KGVersionControl {
 	public static void main(String[] args) throws BackingStoreException {
 		
 		// Creates the args array in order to be referenced and called on....
-		args = args.clone();
+		// args = args.clone();
 		
 		// Creates/Loads the program's preferences file....
 		systemPreferences = Preferences.userNodeForPackage(KGVersionControl.class);
@@ -73,14 +75,11 @@ public class KGVersionControl {
 		commandWordsList = new ArrayList<String>();
 		commandWordsList.add("~KGCom");
 		commandWordsList.add("copy");
-		commandWordsList.add("merge");
 		commandWordsList.add("preferences"); // add workspace command to preferences.... add which projects/branches to password protect....
-		commandWordsList.add("retrieve");
 		commandWordsList.add("save");
 		commandWordsList.add("view");
 		commandWordsList.add("workspace");
 		// commandWordsList.add("comment"); // Allows user to make comments to branches/projects....
-		// commandWordsList.add("create");  // ....
 		// commandWordsList.add("git");     // Execute Github commands....
 		
 		if(args.length == 0)
@@ -100,21 +99,23 @@ public class KGVersionControl {
 					+ "a new project with a different name, if it does not exist....\n\n"
 					+ "[Branch] can either be the name of an existing branch or can create\n"
 					+ "a new branch with a different name, if it does not exsit....\n\n"
-					+ "~KG Version Control program terminated.\n\n");
+					+ "~ KG Version Control program terminated. ~\n\n");
 			System.exit(0);
 		}
-		else if(args.length >= 1 && !commandWordsList.contains(args[0]))
+		else if((args.length >= 1 && args.length < 4) && !commandWordsList.contains(args[0]))
 		{
+			String args1 = args.length >= 2 ? args[1] : "";
+			String args2 = args.length >= 3 ? args[2] : "";
 			System.out.println("\n\n\t\t\t- KG VERSION CONTROL PROGRAM -"
 					+ "\nKGVC Parameters:"
 					+ "\n[command] = " + args[0] 
-					+ "\n[srcPath] = " + args[1]
-					+ "\n[project] = "
-					+ "\n[branch]  = "
+					+ "\n[srcPath] = " + args1
+					+ "\n[project] = " + args2
 					+ "\n\nKGVC Error Message:\n"
 					+ "Invalid [command] for the KG Version Control program....\n"
 					+ "For a list of [command]s key in and enter: ~KGCom\n"
-					+ "~KG Version Control program terminated.\n\n");
+					+ "~ KG Version Control program terminated. ~\n\n");
+			System.exit(0);
 		}
 		else if(args.length == 1 && commandWordsList.contains(args[0]))
 		{
@@ -153,11 +154,11 @@ public class KGVersionControl {
 					+ "\n[branch]  = "
 					+ "\n\nKGVC Error Message:\n"
 					+ "Enter the following parameters for the [command]: " + args[0] + "....\n"
-					+ "For a list of [command] keys and parameters, enter in: ~KGCom\n"
+					+ "For a list of [command] keys and parameters, key in and enter: ~KGCom\n"
 					+ "~ KG Version Control program terminated. ~\n\n");
 			System.exit(0);
 		}
-		else if(args.length >= 5)
+		else if(args.length >= 4 && !commandWordsList.contains(args[0]))
 		{
 			System.out.println("\n\n\t\t\t- KG VERSION CONTROL PROGRAM -"
 					+ "\nKGVC Parameters:"
@@ -170,10 +171,10 @@ public class KGVersionControl {
 					+ "\n(6) [blocked] = **********"
 					+ "\n(7) ...."
 					+ "\n\nKGVC Error Message:\n"
-					+ "More than 4 parameters were entered to the KG Version Control\n"
+					+ "More than 3 parameters were entered to the KG Version Control\n"
 					+ "program. To access the KG Version Control program manual guide,\n"
 					+ "run the program with no parameters....\n"
-					+ "~KG Version Control program terminated.\n\n");
+					+ "~ KG Version Control program terminated. ~\n\n");
 			System.exit(0);
 		}
 		
@@ -190,16 +191,25 @@ public class KGVersionControl {
 		// if args[0] is a [command] and parameters were entered....
 		if(commandWordsList.contains(args[0]) && args.length >= 2)
 		{
-			// Check if file/dir && destPath are valid....
+			// Check if file/directory is valid....
 			File fileOrDir = new File(args[1]);
-			File destOrProject = new File(sysPrefWorkSpaceDirectory + OSfileSeparator + args[2]);
 			Path fileOrDirPath = Paths.get(fileOrDir.getAbsolutePath());
-			Path destOrProjectPath = Paths.get(destOrProject.getAbsolutePath());
 			String isFileOrDir = fileOrDir.isFile() ? "file" : "directory";
+			
+			if(Files.notExists(fileOrDirPath))
+			{
+				// Print out a better error message....
+				System.out.println("KGVC Message ERROR:\n"
+						+ "The [srcPath] is INVALID....\n"
+						+ "~ KG Version Control program terminated. ~\n\n");
+				System.exit(0);
+			}
 			
 			// For MacOS & Linux....
 			String buildWorkSpaceForLinux = "~" + sysPrefWorkSpaceDirectory.substring(sysPrefWorkSpaceDirectory.lastIndexOf("/")+1, sysPrefWorkSpaceDirectory.length());
+			
 			// For Windows....
+			String buildWorkSpaceForWindows = "";
 			
 			// List of Commands....
 			// Alphabetical Order....
@@ -217,36 +227,40 @@ public class KGVersionControl {
 							+ "\n[command] = " + args[0] 
 							+ "\n[srcPath] = " + args[1]
 							+ "\n[desPath] = "
-							+ "\nKGVC Error Message:");
+							+ "\n\nKGVC Error Message:");
 					
 					if(Files.notExists(fileOrDirPath))
 					{
 						System.out.println("The [srcPath] " + isFileOrDir + " path is INVALID....\n");
 					}
 					System.out.println("No [desPath] was passed to the KGVC program to copy [srcPath] over....\n"
-							+ "~ KG VERSION CONTROL PROGRAM TERMINATED. ~\n\n");
+							+ "~ KG Version Control program terminated. ~\n\n");
 					System.exit(0);
 				}
-				else if(args.length == 3)
+				else if(args.length == 3) // Should the copyCommand() check for file/directory && destOrProject are valid....
 				{
+					File destOrProject = new File(sysPrefWorkSpaceDirectory + OSfileSeparator + args[2]);
+					Path destOrProjectPath = Paths.get(destOrProject.getAbsolutePath()); // Turn both paths into global variables?....
+					
 					// Can add conditions to print out error messages here such as above....
-					if(Files.notExists(fileOrDirPath) || Files.notExists(destOrProjectPath))
+					if(Files.notExists(destOrProjectPath))
 					{
+						// Print out a better error message....
 						System.out.println("\nKGVC Parameters:"
 								+ "\n[command] = " + args[0]
 								+ "\n[srcPath] = " + args[1]
 								+ "\n[desPath] = " + args[2]
 								+ "\n\nKGVC Error Message:\n"
-								+ "The [srcPath] " + isFileOrDir + " path is INVALID....\n"
-								+ "Or the [destPath] is INVALID, or both....\n"
-								+ "~ KGVC program terminated. ~\n\n");
+								+ "The [desPath] is INVALID....\n"
+								+ "~ KG Version Control program terminated. ~\n\n");
 						System.exit(0);
 					}
-					
-					// Maybe not pass in buildWS variable and delete it. Instantiate in the copyCommnad() method....
-					// Pass in the absolute full file/dir source path && only the path name the user entered (NOT the full path)....
-					copyCommand(buildWorkSpaceForLinux, fileOrDir.getAbsolutePath(), destOrProject.getName()); 
-					System.exit(0);
+					else if(Files.exists(destOrProjectPath))
+					{
+						// Maybe not pass in buildWS variable and delete it. Instantiate in the copyCommnad() method....
+						copyCommand(buildWorkSpaceForLinux, fileOrDir.getAbsolutePath(), args[2]); 
+						System.exit(0);
+					}
 				}
 				else if(args.length > 3)
 				{
@@ -255,7 +269,7 @@ public class KGVersionControl {
 							+ "~ KGVC program terminated. ~\n\n");
 					System.exit(0);
 				}
-			}
+			} // End of copy command....
 			
 			// Save Command....
 			// CHECK TO SEE IF USER WANTS TO SAVE ONLY A CERTIAN FILE(S) OR AN ENTIRE DIRECTORY....
@@ -269,11 +283,10 @@ public class KGVersionControl {
 							+ "\n[command] = " + args[0] 
 							+ "\n[srcPath] = " + args[1]
 							+ "\n[project] = "
-							+ "\n[branch]  = "
 							+ "\n\nKGVC Error Message:\n"
 							+ "Missing a name for the [project] parameter....\n"
 							+ "To \'save\' a file or a directory, please provide a [project] name....\n"
-							+ "~KG Version Control program terminated.\n\n");
+							+ "~ KG Version Control program terminated. ~\n\n");
 					System.exit(0);
 				}
 				else if(args.length > 4)
@@ -295,28 +308,14 @@ public class KGVersionControl {
 					System.exit(0);
 				}
 				
-				// Fix these two conditions since the [branch] parameter no longer exists....
-				if(Files.notExists(fileOrDirPath) || Files.notExists(destOrProjectPath)) 
-				{
-					System.out.println("\nKGVC Parameters:"
-							+ "\n[command] = " + args[0] 
-							+ "\n[srcPath] = " + args[1]
-							+ "\n[project] = " + args[2]
-							+ "\n[branch]  = " + args[3]
-							+ "\n\nKGVC Error Message:\n"
-							+ "Source of [fileSrc/dirSrc] does NOT exist....\n"
-							+ "Please make sure [fileSrc/dirSrc] already exists....\n"
-							+ "~KG Version Control program terminated.\n\n");
-					System.exit(0);
-				}
-				else if(Files.exists(fileOrDirPath) && Files.exists(destOrProjectPath))
+				if(Files.exists(fileOrDirPath))
 				{
 					// Rework the save methods....
 					// No need to check for [branch] parameter anymore....
 					checkIfProjectExist(sysPrefWorkSpaceDirectory, fileOrDir, args[2], "", isFileOrDir);
 				}
 				 System.exit(0);
-			}
+			} // End of Save command....
 			
 			if(args[0].equalsIgnoreCase("preferences") || args[0].equalsIgnoreCase("pref") || args[0].equalsIgnoreCase("prefs"))
 			{
@@ -334,7 +333,7 @@ public class KGVersionControl {
 		// Needs print formatting work....
 		// Include that the program only takes in 4 parameters....
 		// To make the cursor in the terminal/command prompt move up 37 lines....
-		System.out.println("\n\n\n\t\t\t\t- KG VERSION CONTROL APP -"
+		System.out.println("\n\n\t\t\t- KG VERSION CONTROL APP -"
 				+ "\n*Parameters placed inside '[]' brackets are mandatory parameters, while parameters"
 				+ "\nthat are placed inside the '<>' brackets are optional parameters."
 				+ "\nCommand List: "
@@ -365,9 +364,8 @@ public class KGVersionControl {
 				+ "\n\tthe branches of the project. If a project's name and a branch's name is passed,"
 				+ "\n\tview all of the branch's files and sub directories."
 				+ "\n"
-				+ "\nworkspace : change the current back up workspace directory path.\n\n\n");
+				+ "\nworkspace : change the current back up workspace directory path.\n\n");
 	}
-
 	
 	private static void displayAllProjectsAndBranches() {}
 	
@@ -405,7 +403,7 @@ public class KGVersionControl {
 			{
 				System.out.println("\nThe workspace directory entered does NOT exist, INVALID path....\n"
 						+ "Make sure the valid directory already exists before trying to switch workspaces.\n"
-						+ "~KG Version Control program terminated.\n\n\n");
+						+ "~ KG Version Control program terminated. ~\n\n");
 				System.exit(0);
 			}
 			
@@ -420,14 +418,14 @@ public class KGVersionControl {
 			else if(changeWorkSpaceDir.equalsIgnoreCase("n") || changeWorkSpaceDir.equalsIgnoreCase("no"))
 			{
 				System.out.println("\n\nRun the program again with a certain new backup workspace directory.\n"
-						+ "~KG Version Control program terminated.\n\n\n");
+						+ "~KG Version Control program terminated.\n\n");
 				System.exit(0);
 			}
 		}
 		else if(changeWorkSpaceDir.equalsIgnoreCase("n") || changeWorkSpaceDir.equalsIgnoreCase("no"))
 		{
 			System.out.println("\nNo changes were made to the backup workspace directory.\n"
-					+ "~KG Version Control program terminated.\n\n\n");
+					+ " ~KG Version Control program terminated. ~\n\n");
 			System.exit(0);
 		}
 		else
@@ -437,8 +435,6 @@ public class KGVersionControl {
 	}
 	
 	// Prompts user to enter a workspace directory and validates whether path exists or not.... 
-	
-	
 	private static String enforceValidWorkspaceDirectory(Preferences systemPreferences) {
 
 		// Use regex here?....
@@ -481,48 +477,82 @@ public class KGVersionControl {
 		return workSpaceDirectory;
 	}
 	
-	
-	private static void copyCommand(String workspace, String args1, String args2) {
+	private static void copyCommand(String workspace, String fileOrDirPath, String userInputDestPath) {
 		
-		// args1 file/dir has been validated before reaching the copy command method....
-		// args2 should be the project the user entered, with or without branches included....
+		// "fileOrDirPath" file/dir has been validated before reaching the copy command method....
+		// "userInputDestPath" can be either any destination path within the user's directory or within the workspace....
 		
 		// Check preference for password protection....
 		// Create method....
 		
-		// Print out some message here....
+		// Print out some message here and further within the method letting the user knowing file or directory is being copied....
+		
+		Path srcPath = Paths.get(fileOrDirPath);
+		Path destPath = Paths.get(sysPrefWorkSpaceDirectory + OSfileSeparator + userInputDestPath);
 		
 		// methods for both conditions?....
 		// Check preference to copy anywhere or to workspace....
 		if(sysPrefCopyAnywhereOrWorkspace.equalsIgnoreCase("workspace"))
 		{
-			// Check if file/dir and destSrc are valid....
-			File fileOrDirSrc = new File(args1);
-			File destSrc = new File(args2);
-			String isFileOrDir = fileOrDirSrc.isFile() ? "file" : "directory";
-//			
-			Path srcPath = Paths.get(fileOrDirSrc.getAbsolutePath());
-			Path destPath = Paths.get(destSrc.getAbsolutePath());
-			
-			if(Files.notExists(srcPath) && Files.exists(destPath))
-			{
-				
-			}
-			else if(Files.exists(srcPath) && Files.notExists(destPath))
+			if(Files.exists(srcPath) && Files.notExists(destPath))
 			{
 				// Program allows user to create a branch if system preferences permit it....
 				// Also, depending on the number of depth the KGVC is permitted to access directories....
-				// [desPath] projectName/branchName.... in this case, branch name does NOT exist....
 				// Encapsulate this into a method()....
-				System.out.println("The KGVC [desPath] parameter was INVALID....\n");
 				
+				// First detect if project exists....
+				// if project does NOT exist: only create project, if system preferences allow it, and terminate program
+				// else if project does exist: can create branches, if user entered more than a project && if system preferences allow it....
+				// Compile error: crashes if user only enters project name and no branches....
+				String projectName = userInputDestPath.substring(0, userInputDestPath.indexOf("/"));
+				Path projectNamePath = Paths.get(projectName); // Not going to exist, only has project name and no path?....
+				System.out.println("Project name path: " + projectNamePath);
+				if(Files.notExists(projectNamePath))
+				{
+					System.out.println("KGVC Error Message:\n"
+							+ "The [desPath] is INVALID....\n"
+							+ "No such [project] exists within the workspace directory....\n");
+//					if(sysPrefCreateProject == true)
+//					{
+						System.out.println("Create new [project] using: (Y / N):\n"
+								+ projectName);
+//					}
+//					else
+//					{
+						if(userInputDestPath.length() > projectName.length())
+						{
+							System.out.println("KGVC Error Message:\n"
+									+ "The [desPath] is INVALID....\n"
+									+ "No such [project] and branches exists within the workspace directory....\n"
+									+ "~ KG Version Control program terminated. ~\n\n");
+							System.exit(0);
+						}
+						else if(userInputDestPath.length() <= projectName.length())
+						{
+							System.out.println("KGVC Error Message:\n"
+									+ "The [desPath] is INVALID....\n"
+									+ "No such [project] exists within the workspace directory....\n"
+									+ "~ KG Version Control program terminated. ~\n\n");
+							System.exit(0);
+						}
+						
+//					}
+				}
+				else if(Files.exists(projectNamePath))
+				{
+					// check to see which branch path is valid by looping through user input....
+					// 
+				}
 				
-//				if(sysPrefCreateProject == True) else if false; system checks for creating branches.....
+				// Print out a message here....
+//				if(sysPrefCreateProject == True) else if false; system checks for creating branches if project exists.....
 //				{
-					System.out.println("KGVC program detecting next valid path....");
+					// System preferences allow user to create project/branches....
+					System.out.println("KG Version Control program detecting next valid path....");
+					
 					// loop back through directories to find which path exists....
-					String destProjectPath = (sysPrefWorkSpaceDirectory + OSfileSeparator + args2);
-					String[] pathTokens = args2.split("/");
+					String destProjectPath = (sysPrefWorkSpaceDirectory + OSfileSeparator + userInputDestPath);
+					String[] pathTokens = userInputDestPath.split("/");
 					String newTrimmedPaths = destProjectPath;
 					for(int depth = 0; depth < (pathTokens.length-1); depth++)
 					{
@@ -560,7 +590,7 @@ public class KGVersionControl {
 								else
 								{
 									System.out.println("Enter either yes (y), no (n), or quit (q)....\n"
-											+ "~ KGVC program terminated. ~");
+											+ "~ KG Version Control program terminated. ~");
 								}
 								// Get cursor back to default....
 								System.out.println();
@@ -660,7 +690,7 @@ public class KGVersionControl {
 			else if(Files.exists(srcPath) && Files.exists(destPath))
 			{
 //				try {
-//					Process p = Runtime.getRuntime().exec("cp -R " + new File(args2).getAbsolutePath() + " " + new File(args2).getAbsolutePath());
+//					Process p = Runtime.getRuntime().exec("cp -R " + fileOrDirPath + " " + new File(sysPrefWorkSpaceDirectory + OSfileSeparator + userInputDestPath).getAbsolutePath());
 //					p.waitFor();
 //					p.destroy();
 //				} catch (Exception e) {
@@ -671,15 +701,12 @@ public class KGVersionControl {
 		}
 		else if(sysPrefCopyAnywhereOrWorkspace.equalsIgnoreCase("anywhere"))
 		{
-			File destSrc = new File(args2);
-			Path destPath = Paths.get(destSrc.getAbsolutePath());
-			
 			if(Files.notExists(destPath))
 			{
 				System.out.println("\nKGVC Parameters:\n"
 						+ "[command]: copy\n"
-						+ "[srcPath]: " + args1 + "\n"
-						+ "[desPath]: " + args2 + "\n\n"
+						+ "[srcPath]: " + fileOrDirPath + "\n"
+						+ "[desPath]: " + userInputDestPath + "\n\n"
 						+ "KGVC Error Message:\n"
 						+ "The [desPath] is INVALID....\n"
 						+ "~ KGVC program terminated. ~");
@@ -689,10 +716,9 @@ public class KGVersionControl {
 //				Process copyCom = new
 			}
 		}
-	}
+	} // End of copy command....  
 	
 	// Method checks if a project exists due to user input parameters & system preferences....
-	
 	private static void checkIfProjectExist(String workSpaceDirectory, File fileOrDirSrc, String projectName, String branchName, String isFileOrDir) {
 		
 		// Establish project path....
@@ -909,7 +935,6 @@ public class KGVersionControl {
 		}
 	}
 	
-	
 	private static void checkAndSaveToBranch(File fileOrDirSrc, String branchPath, String isFileOrDir) {
 		
 		if(branchPath.endsWith("Master"))
@@ -1063,8 +1088,6 @@ public class KGVersionControl {
 //		p.destroy();
 	}
 	
-	
-
 	private static void copyDirectoryRecursively(File source, File target) throws IOException, InterruptedException {
 		if (!target.exists()) {
 			target.mkdir();
